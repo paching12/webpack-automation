@@ -1,0 +1,162 @@
+#!/bin/bash
+
+    ##########################################
+    #  React proyect init with webpack       #
+    #  @brief install simple dependencies    #
+    #  and configure the enviroment webpack  #
+    #                                        #
+    #          @autor Paching12              #
+    #                                        #
+    #  @version 0.1                          #
+    ##########################################
+
+# @brief Main code, This configures a webpack basic enviroment for React     
+# @params string current folder, string devmode  
+# @return void
+function installReactDependencies() {
+	
+	##################
+	#    Arguments   #
+	##################
+
+	#1 - Current dir 
+	#2 - DevMode 
+
+	
+	# Dev mode
+	devMode=false
+	# Validate if the devMode is activated
+	if [ -z "$2" ]
+	then
+		devMode=false
+	else
+		devMode=true
+	fi
+
+	# Counter guide
+	numberSteps=0
+
+	# Main path
+	mainPath='src'
+
+	# Main React file
+	mainReactFile='index.js'
+
+	# Main file compiled
+	mainFileCompiled='main.js'
+
+	# Validate if the first argument exist
+	if [ -z "$1" ]
+	then
+		echo "No argument supplied 🐳 "
+		return 0
+	fi
+
+	# Verify if the current dir is the same with the specified in the arguments 
+	currentPath=${PWD##*/}
+
+	if [ "$currentPath" != "$1" ]; then
+		echo "Current path didn't match with the first argument -> $currentPath 🐳"
+		return 0
+	fi
+	
+
+	if [ "$devMode" = false ] ; then
+		#/0 Inicializar proyecto
+		npm init -y && echo "✅ Step $numberSteps - Proyect Initialization..."
+
+		numberSteps=$((numberSteps+1))
+
+		#/1 Intall webpack and utilities
+		echo "npm i $dependencies --save-dev" 
+		npm i webpack webpack-cli html-webpack-plugin webpack-dev-server --save-dev && echo "✅ Step $numberSteps - Install webpack and plugins"
+	fi
+
+	#/2 Make directory src and index.js file
+	mkdir -p $mainPath 
+
+	if [[ ! -e "$mainPath/$mainReactFile" ]]; then
+		touch "$mainPath/$mainReactFile"
+		echo "console.log(\"Basic enviroment finished!\")" > "$mainPath/$mainReactFile"
+	fi
+
+	numberSteps=$((numberSteps+1))
+	echo "✅ Step $numberSteps - Make directory src and index.js file"
+
+	numberSteps=$((numberSteps+1))
+
+	# Webpack single content config
+	config=$(getBasicWebpackEnviroment)
+
+	#/3 Create webpack file config
+	echo "$config" > webpack.config.js && echo "✅ Step $numberSteps - Webpack single content config"
+	
+	numberSteps=$((numberSteps+1))
+
+	#/4 Add build command to scripts package json  
+	commandBuild="\"build\": \"webpack\","
+	addCommandToScripts  "$commandBuild" && echo "✅ Step $numberSteps - Add build command to scripts package json "
+
+	numberSteps=$((numberSteps+1))
+	commandServer="\"dev\": \"webpack-dev-server\","
+	addCommandToScripts  "$commandServer" && echo "✅ Step $numberSteps - Add dev (webpack-dev-server) command to scripts package json "
+
+
+	# Free memory
+	unset commandBuild
+	unset commandServer
+
+	numberSteps=$((numberSteps+1))
+	
+	#/5 Finally run the dev server with webpack
+	echo "✅ Step $numberSteps - Finally run the dev server with webpack"
+	npm run dev 
+	
+	# Manual way compone and run 
+	: 'numberSteps=$((numberSteps+1))
+	if [ "$devMode" = false ] ; then
+
+		#/4 Pack/Compile the modules with webpack
+		./node_modules/.bin/webpack "$mainPath/$mainReactFile" && "✅ Step $numberSteps - Pack/Compile the modules with webpack"
+		numberSteps=$((numberSteps+1))
+		
+		#/6 Execute with node
+		node "dist/$mainFileCompiled" && echo "✅ Step $numberSteps - Execute with node"
+	
+	fi'
+	
+}
+
+# @brief This function add Command to package.json file inside scripts
+# @params string script specified,  
+# @return void
+function addCommandToScripts () {
+	
+	if [ -z "$1" ]
+	then
+		echo "No argument supplied to $0 function 🐳 "
+		return 125
+	fi
+
+	scripts="\"scripts\": {"
+	command="$scripts\n    $1"
+	sed -i "s/$scripts/$command/g" package.json 
+}
+
+# @brief This function return a basic code from webpack
+# @params void,  
+# @return string
+function getBasicWebpackEnviroment () {
+	return "\
+// WebPack Dependencies/Plugins
+const HtmlWebPackPlugin = require('html-webpack-plugin');
+
+module.exports = {
+	output: {
+		filename: 'app.bundle.js'
+	},
+	plugind [
+		new HtmlWebpackPlugin(),
+	]
+}"
+}
