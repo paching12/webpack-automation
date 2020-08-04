@@ -86,7 +86,7 @@ function installReactDependencies() {
 	numberSteps=$((numberSteps+1))
 
 	# Webpack single content config
-	config=$(getBasicWebpackEnviroment)
+	config=$(getBasicWebpackEnviroment) 
 
 	#/3 Create webpack file config
 	echo "$config" > webpack.config.js && echo "✅ Step $numberSteps - Webpack single content config"
@@ -138,8 +138,8 @@ function addCommandToScripts () {
 		return 125
 	fi
 
-	scripts="\"scripts\": {"
-	command="$scripts\n    $1"
+	local scripts="\"scripts\": {"
+	local command="$scripts\n    $1"
 	sed -i "s/$scripts/$command/g" package.json 
 }
 
@@ -147,7 +147,7 @@ function addCommandToScripts () {
 # @params void,  
 # @return string
 function getBasicWebpackEnviroment () {
-	return "\
+	echo "\
 // WebPack Dependencies/Plugins
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
@@ -155,8 +155,8 @@ module.exports = {
 	output: {
 		filename: 'app.bundle.js'
 	},
-	plugind [
-		new HtmlWebpackPlugin(),
+	plugins: [
+		new HtmlWebPackPlugin(),
 	]
 }"
 }
