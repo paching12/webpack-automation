@@ -45,6 +45,9 @@ function installReactDependencies() {
 	# Main file compiled
 	mainFileCompiled='main.js'
 
+	#Main html file
+	mainFileHtml='index.html'
+
 	# Validate if the first argument exist
 	if [ -z "$1" ]
 	then
@@ -77,7 +80,9 @@ function installReactDependencies() {
 
 	if [[ ! -e "$mainPath/$mainReactFile" ]]; then
 		touch "$mainPath/$mainReactFile"
-		echo "console.log(\"Basic enviroment finished!\")" > "$mainPath/$mainReactFile"
+		
+		indexReact=$(getBasicRenderReact)
+		echo "$indexReact" > "$mainPath/$mainReactFile"
 	fi
 
 	numberSteps=$((numberSteps+1))
@@ -85,15 +90,32 @@ function installReactDependencies() {
 
 	numberSteps=$((numberSteps+1))
 
+	if [ "$devMode" = false ] ; then
+		
+		#/3 Install react/dom, babel
+		npm i react react-dom @babel/core @babel/preset-env @babel/preset-react babel-loader 
+	
+	fi
+
+	documentHTML=$(getHTMLStructure "SPA main html file")  
+
+	if [[ ! -e "$mainPath/$mainFileHtml" ]]; then
+		touch "$mainPath/$mainFileHtml"
+	fi
+	
+	echo "$documentHTML" > "$mainPath/$mainFileHtml" && echo "✅ Step $numberSteps - Install react/dom, babel and make html template "
+
+	numberSteps=$((numberSteps+1))
+
 	# Webpack single content config
 	config=$(getBasicWebpackEnviroment) 
 
-	#/3 Create webpack file config
+	#/4 Create webpack file config
 	echo "$config" > webpack.config.js && echo "✅ Step $numberSteps - Webpack single content config"
 	
 	numberSteps=$((numberSteps+1))
 
-	#/4 Add build command to scripts package json  
+	#/5 Add build command to scripts package json  
 	commandBuild="\"build\": \"webpack\","
 	addCommandToScripts  "$commandBuild" && echo "✅ Step $numberSteps - Add build command to scripts package json "
 
@@ -101,14 +123,16 @@ function installReactDependencies() {
 	commandServer="\"dev\": \"webpack-dev-server\","
 	addCommandToScripts  "$commandServer" && echo "✅ Step $numberSteps - Add dev (webpack-dev-server) command to scripts package json "
 
-
 	# Free memory
 	unset commandBuild
 	unset commandServer
+	unset documentHTML
+	unset config
+	unset indexDocument
 
 	numberSteps=$((numberSteps+1))
 	
-	#/5 Finally run the dev server with webpack
+	#/6 Finally run the dev server with webpack
 	echo "✅ Step $numberSteps - Finally run the dev server with webpack"
 	npm run dev 
 	
@@ -147,7 +171,7 @@ function addCommandToScripts () {
 # @params void,  
 # @return string
 function getBasicWebpackEnviroment () {
-	echo "\
+	echo "
 // WebPack Dependencies/Plugins
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 
@@ -156,7 +180,64 @@ module.exports = {
 		filename: 'app.bundle.js'
 	},
 	plugins: [
-		new HtmlWebPackPlugin(),
-	]
+		new HtmlWebPackPlugin({
+			template: 'src/index.html'
+		}),
+	],
+	module: {
+		rules: [
+		{
+			test: /\.js$/,
+			exclude: /node_modules/,
+			use: {
+				loader: 'babel-loader',
+				options: {
+					presets: [
+					'@babel/preset-env', 
+					'@babel/preset-react'
+					]
+				}
+			}
+		}
+		]
+	}
 }"
+}
+
+# @brief This function provide a basic code from react [file src/index.js]
+# @params void,  
+# @return string
+function getBasicRenderReact () {
+	echo "\
+import React from 'react'
+import ReactDOM from 'react-dom'
+
+ReactDOM.render( <h1>Example with babel</h1>, document.getElementById('app') );
+"
+}
+
+# @brief This function provide a basic structure of HTML
+# @params string title of document,  
+# @return string
+function getHTMLStructure() {
+
+	if [ -z "$1" ]
+	then
+		echo "No argument supplied to $0 function 🐳 "
+		return 125
+	fi
+
+	echo "\
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+    <title>$1</title>
+</head>
+<body>
+	<div id='app'></div>    
+</body>
+</html> "
 }
